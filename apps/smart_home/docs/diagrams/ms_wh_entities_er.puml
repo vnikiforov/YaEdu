@@ -1,0 +1,7 @@
+@startuml
+entity Person {
+}
+entity Location {
+}
+Person ||--o{ Location : владеет
+@enduml

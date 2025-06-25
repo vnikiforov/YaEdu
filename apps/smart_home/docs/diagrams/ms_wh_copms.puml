@@ -1,0 +1,8 @@
+@startuml
+title SmartHome MS Components Diagram
+
+top to bottom direction
+
+!includeurl c4tpl/C4_Component.puml
+
+@enduml
