@@ -1,0 +1,22 @@
+openapi: 3.0.3
+info:
+  title: SmartHomeSys API
+  description: "Public API sync API for SmartHome system"
+  contact:
+    email: macmaniak@yandex.ru
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.1
+
+servers:
+  - url: https://shsys.ru/api
+tags:
+  - name: Auth
+    description: Авторизация и аутентификация в системе
+  - name: Sys-ctl
+    description: Управление устройствами и системами
+  - name: Info
+    description: Получение информации о состоянии систем и оборудования
+paths:
+  /
