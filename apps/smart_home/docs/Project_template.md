@@ -79,27 +79,331 @@
 
 ### 5. Визуализация контекста системы — диаграмма С4
 
+@startuml
+title SmartHome Monolith (AS IS) Context Diagram
 
+top to bottom direction
+
+!includeurl diagrams/c4tpl/C4_Component.puml
+
+System_Boundary(generic_commands, "Generic set of abilities") {
+    Person(user, "User", "A tenant of the house")
+    Person(admin, "Administrator", "System administrator, who can manage temperature controllers")
+}
+
+System(UserCommunicator, "Public User Inetrface", "API descriptor, format and rules of supported requsets and answers")
+
+Rel(generic_commands,  UserCommunicator, "Request for current controller state")
+Rel(generic_commands,  UserCommunicator, "Request for full house's controller list")
+Rel(generic_commands,  UserCommunicator, "Update controller attributes")
+Rel(generic_commands,  UserCommunicator, "Setup required temperature for the controller")
+Rel(UserCommunicator, generic_commands, "Inform about controller's state")
+Rel(UserCommunicator, generic_commands, "Returns controllers list")
+Rel(admin, UserCommunicator, "Register new controller")
+Rel(admin, UserCommunicator, "Delete the controller")
+
+System_Ext(hw_api, "Controller Hardware Interface", "REST API")
+System_Ext(data_storage, "DB storage for house's contollers", "PostgreSQL DB")
+
+Rel(UserCommunicator, data_storage, "Store information about installed controllers")
+
+Rel(UserCommunicator, hw_api, "Setup requried temperature by sensor ID")
+Rel(hw_api, UserCommunicator, "Read current temperature from sensor by ID")
+
+@enduml
 
 # Задание 2. Проектирование микросервисной архитектуры
 
-В этом задании вам нужно предоставить только диаграммы в модели C4. Мы не просим вас отдельно описывать получившиеся микросервисы и то, как вы определили взаимодействия между компонентами To-Be системы. Если вы правильно подготовите диаграммы C4, они и так это покажут.
-
 **Диаграмма контейнеров (Containers)**
 
-Добавьте диаграмму.
+@startuml
+title SmartHome MS Containers Diagram
+
+left to right direction
+
+!includeurl diagrams/c4tpl/C4_Container.puml
+
+Person(user, "SmartHomeUser", "Пользователь Умного дома")
+
+Container(AuthSvc, "Authorization Service", "PHP/Yii", "Авторизация пользователя в системе, с использованием различных механизмов [OAuth/VK/Google/Yandex etc.]")
+Container(UI_Svc, "UI Create&Handle ", "PHP/Yii/React/JS",  "Создание внешнего представления и обработка пользовательских действий")
+Container(HW_Support_Svc, "Hardware Handling", "PHP/Python/C#", "Коммуникация с аппаратными интерфейсами оборудования Умного дома")
+Container(DB_Svc, "DataBase Center", "SQL/JSON", "Хранение данных")
+Container(API_Gate, "External API", "PHP/Python", "Интерфейс для внешних коммуникаций")
+Container(CommCenter, "Commander Center", "PHP/Python", "Маршрутизатор и исполнитель запросов")
+
+Rel(AuthSvc, DB_Svc, "Get user info - role & rights")
+Rel(AuthSvc, DB_Svc, "Save loging event to log")
+Rel(AuthSvc, UI_Svc, "Create login prompt for user's device")
+Rel(AuthSvc, CommCenter, "Notify about succesful login")
+Rel(user, CommCenter, "Users's request")
+Rel(CommCenter, AuthSvc, "Ask for session authorization")
+Rel(CommCenter, HW_Support_Svc, "Exec requested command")
+Rel(HW_Support_Svc, DB_Svc, "Save action to log")
+Rel(HW_Support_Svc, DB_Svc, "Get required refernce info")
+Rel(API_Gate, CommCenter, "Request for execute operation")
+Rel(CommCenter, UI_Svc, "Create UI for requesting device")
+@endumlобавьте диаграмму.
 
 **Диаграмма компонентов (Components)**
 
-Добавьте диаграмму для каждого из выделенных микросервисов.
+@startuml
+title SmartHome System Component Diagram
+
+top to bottom direction
+
+!includeurl c4tpl/C4_Component.puml
+
+Container(AuthSvc, "Authorization Service", "PHP/Yii") {
+    Component(ExtAuthController, "ExtAuthController", "Handles authentication by external services")
+    Component(InternalAuthController, "IntAuthController", "Handles authentication by self system")
+    Component(UIbuiler, "AuthUIbuilder", "Create UI for auth for various platforms")
+    Component(AccessManager, "AccessManager", "Controls access to requested resources")
+}
+
+Container(UI_Svc, "UI Create&Handle", "PHP/Yii/React/JS") {
+    Component(UIfabric, "UIfabric", "Gate for request for creating UI")
+    Component(PlatformSupport, "PlatformSupport", "Make same actions for various platform - Web\Mobile\IoT")
+    Component(GUIlibSupport, "GUIlibSupport", "Graphic primitive library")
+    Component(UserActionsSupport, "UserActionsSupport", "User activity handling")
+}
+
+Container(CommCenter, "Commander Center", "PHP/Python") {
+    Component(CommandRouter, "CommandRouter", "Route request to destination")
+    Component(CommandParser, "CommandParser", "Parse & check command parameters")
+    Component(ErrorHandling, "ErrorHandling", "Handle all incorrect actions and cases")
+    Component(ActivityLog, "ActivityLog", "Do log all user and components activities")
+}
+
+Container(API_Gate, "External API", "PHP/Python") {
+    Component(PublisherService, "PublisherService", "Run & handle external requests listener")
+    Component(SecuriyLevel, "SecuriyLevel", "Organize safe data exchange")
+}
+
+Container(HW_Support_Svc, "Hardware Handling", "PHP/Yii/React/JS") {
+    Component(HALsupport, "HWabstractionSupport", "Univesal hardware support system")
+    Component(ClimatSupport, "ClimatDevicesSupport", "Supporting heater, air-conditiong")
+    Component(SequritySupport, "SequrityDevicesSupport", "Supporting security devices")
+    Component(CleaningSupport, "CleaningDevicesSupport", "Supporting cleaning devices")
+    Component(MediaSupport, "MultimediaDevicesSupport", "Supporting multimedia devices")
+}
+
+Container(DB_Svc, "DataBase Center", "SQL/JSON") {
+    Component(DataBaseUnifiedEngine, "DataBaseUnifiedEngine", "Universal DB interface")
+    Component(PGsupport, "PGsupport", "PostgreSQL supporter")
+    Component(JSONdataSupport, "JSONdataSupport", "Simply JSON data storage support")
+    Component(XMLdataSupport, "XMLdataSupport", "Simply XML data storage support")
+}
+
+Rel(UIbuiler, UIfabric, "Ask for creating system login prompt")
+Rel(UIfabric, UIbuiler, "Create system login prompt")
+Rel(UIbuiler, ExtAuthController, "Do authorization by external system")
+Rel(UIbuiler, InternalAuthController, "Do authorization by self")
+
+Rel(UIbuiler, PlatformSupport, "Making platform depended manipulations")
+Rel(UIbuiler, GUIlibSupport, "Create GUI elemens")
+Rel(UserActionsSupport, GUIlibSupport, "Binding UI elemennts to user activities")
+
+Rel(PublisherService, SecuriyLevel, "Check input data")
+Rel(PublisherService, CommandParser, "Parse command format")
+Rel(CommandParser, AccessManager, "Verify client's access")
+Rel(CommandParser, CommandRouter, "Call command's handler")
+Rel(CommandRouter, ActivityLog, "Log current action")
+Rel(CommandRouter, ErrorHandling, "Handle execution problems")
+Rel(CommandRouter, HALsupport, "Exec hardware actions")
+Rel(CommandRouter, DataBaseUnifiedEngine, "Read\write required persistent data")
+
+Rel(HALsupport, ClimatSupport, "Exec climate control commands")
+Rel(HALsupport, SequritySupport, "Exec sequrity control commands")
+Rel(HALsupport, CleaningSupport, "Exec cleaning control commands")
+Rel(HALsupport, MediaSupport, "Exec multimedia control commands")
+Rel(HALsupport, DataBaseUnifiedEngine, "Read\write required persistent data")
+
+Rel(DataBaseUnifiedEngine, PGsupport, "Implements PostgreSQL storage")
+Rel(DataBaseUnifiedEngine, JSONdataSupport, "Implements JSON\KV storage")
+Rel(DataBaseUnifiedEngine, XMLdataSupport, "Implements XML\KV storage")
+
+@enduml
 
 **Диаграмма кода (Code)**
 
-Добавьте одну диаграмму или несколько.
+@startuml
+title SmartHome MS "Commander Center" - component "CommandParser" code diagra
 
+top to bottom direction
+
+!includeurl c4tpl/C4_Component.puml
+
+class Command{
+    +string Name
+    +string URL
+    +ArrayList<> Attributes
+    +string Format
+
+    +bool IsCorrect()
+    +void PrintMan()
+}
+
+class CommandReference {
+    #ArrayList<> SupportingCommands
+    +bool IsCommandSupported()
+}
+
+class CommandAttribute {
+    +string Name
+    +int ValueType
+    +bool IsRequired()
+}
+
+class RequestAcceptor{
+    +bool ReadInput()
+    +bool CanExec()
+    +void PoolCommand()
+    -bool ParseRAW()
+}
+
+class Operation{
+    +ArrayList<> CommandChain
+    +ArrayList Data
+}
+
+RequestAcceptor --+ CommandReference
+CommandAttribute "1" -- "0..*" Command : includes
+Command "1" -- "0..*" CommandReference : includes
+Operation --+ Command
+
+
+@enduml
 # Задание 3. Разработка ER-диаграммы
 
-Добавьте сюда ER-диаграмму. Она должна отражать ключевые сущности системы, их атрибуты и тип связей между ними.
+@startuml
+
+left to right direction
+
+' Пользователи, группы, права
+entity User {
+    *id
+    ---
+    Name
+}
+
+entity Role {
+    *id
+    ---
+    Name
+}
+
+entity Permission {
+    *id
+    ---
+    Name
+}
+
+entity RoleMap {
+    Role
+    Permission
+}
+
+entity UserRightsMap {
+    Role
+    UserID
+}
+
+UserRightsMap::Role ||--o{ Role::ID
+UserRightsMap::UserID ||--o{ User::ID
+
+RoleMap::Role ||--o{ Role::ID
+RoleMap::Permission ||--o{ Permission::ID
+
+' Дома
+
+entity ServicedHouse {
+    *id
+    ---
+    Address
+    HomeTitle
+    Owner
+}
+
+entity HouseLocation {
+    *id
+    ---
+    Name
+    Type
+}
+
+entity Ref_HouseLocationType {
+    *id
+    ---
+    Name
+}
+
+entity HouseStructures {
+    House
+    ---
+    Location
+    LocatinKind
+}
+
+
+entity HouseKeepers {
+    User
+    House
+}
+
+HouseLocation::Type ||--|| Ref_HouseLocationType::ID
+HouseStructures::House ||--|| ServicedHouse::ID
+HouseStructures::Location ||--o{ HouseLocation::ID
+ServicedHouse::Owner ||--|| User::ID
+HouseKeepers::User ||--o{ User::ID
+HouseKeepers::House ||--o{ ServicedHouse::ID
+
+' Устройства
+
+entity ConrolledSystem {
+    *id
+    ---
+    Name
+    Type
+}
+
+entity ControlDevice {
+    *id
+    ---
+    DisplayName
+    HwModel
+    UI_URL
+    System
+}
+
+entity HouseDeviesMap {
+    Device
+    House
+}
+
+entity Ref_DeviceVendors {
+    *id
+    ---
+    Name
+    OfficalURL
+}
+
+entity Ref_DeviceModels {
+    *id
+    ---
+    Name
+    Vendor
+    Type
+}
+
+Ref_DeviceModels::Vendor ||--o{ Ref_DeviceVendors::ID
+ControlDevice::HwModel ||--o{ Ref_DeviceModels::ID
+ControlDevice::System ||--|| ConrolledSystem::ID
+
+HouseDeviesMap::Device ||--o{ ControlDevice::ID
+HouseDeviesMap::House ||--o{ ServicedHouse::ID
+
+@enduml
 
 # Задание 4. Создание и документирование API
 

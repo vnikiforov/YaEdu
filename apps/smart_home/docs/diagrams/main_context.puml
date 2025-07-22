@@ -29,5 +29,4 @@ Rel(UserCommunicator, data_storage, "Store information about installed controlle
 Rel(UserCommunicator, hw_api, "Setup requried temperature by sensor ID")
 Rel(hw_api, UserCommunicator, "Read current temperature from sensor by ID")
 
-
 @enduml

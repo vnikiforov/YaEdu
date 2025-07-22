@@ -1,7 +1,128 @@
 @startuml
-entity Person {
+
+left to right direction
+
+' Пользователи, группы, права
+entity User {
+    *id
+    ---
+    Name
 }
-entity Location {
+
+entity Role {
+    *id
+    ---
+    Name
 }
-Person ||--o{ Location : владеет
+
+entity Permission {
+    *id
+    ---
+    Name
+}
+
+entity RoleMap {
+    Role
+    Permission
+}
+
+entity UserRightsMap {
+    Role
+    UserID
+}
+
+UserRightsMap::Role ||--o{ Role::ID
+UserRightsMap::UserID ||--o{ User::ID
+
+RoleMap::Role ||--o{ Role::ID
+RoleMap::Permission ||--o{ Permission::ID
+
+' Дома
+
+entity ServicedHouse {
+    *id
+    ---
+    Address
+    HomeTitle
+    Owner
+}
+
+entity HouseLocation {
+    *id
+    ---
+    Name
+    Type
+}
+
+entity Ref_HouseLocationType {
+    *id
+    ---
+    Name
+}
+
+entity HouseStructures {
+    House
+    ---
+    Location
+    LocatinKind
+}
+
+
+entity HouseKeepers {
+    User
+    House
+}
+
+HouseLocation::Type ||--|| Ref_HouseLocationType::ID
+HouseStructures::House ||--|| ServicedHouse::ID
+HouseStructures::Location ||--o{ HouseLocation::ID
+ServicedHouse::Owner ||--|| User::ID
+HouseKeepers::User ||--o{ User::ID
+HouseKeepers::House ||--o{ ServicedHouse::ID
+
+' Устройства
+
+entity ConrolledSystem {
+    *id
+    ---
+    Name
+    Type
+}
+
+entity ControlDevice {
+    *id
+    ---
+    DisplayName
+    HwModel
+    UI_URL
+    System
+}
+
+entity HouseDeviesMap {
+    Device
+    House
+}
+
+entity Ref_DeviceVendors {
+    *id
+    ---
+    Name
+    OfficalURL
+}
+
+entity Ref_DeviceModels {
+    *id
+    ---
+    Name
+    Vendor
+    Type
+}
+
+Ref_DeviceModels::Vendor ||--o{ Ref_DeviceVendors::ID
+ControlDevice::HwModel ||--o{ Ref_DeviceModels::ID
+ControlDevice::System ||--|| ConrolledSystem::ID
+
+HouseDeviesMap::Device ||--o{ ControlDevice::ID
+HouseDeviesMap::House ||--o{ ServicedHouse::ID
+
 @enduml
