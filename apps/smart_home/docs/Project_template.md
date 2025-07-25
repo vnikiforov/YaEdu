@@ -414,7 +414,7 @@ HouseDeviesMap::House ||--o{ ServicedHouse::ID
 
 ### 2. Документация API
 
-Здесь приложите ссылки на документацию API для микросервисов, которые вы спроектировали в первой части проектной работы. Для документирования используйте Swagger/OpenAPI или AsyncAPI.
+https://github.com/vnikiforov/YaEdu/blob/warmhouse/apps/smart_home/docs/api_v1.yaml
 
 # Задание 5. Работа с docker и docker-compose
 
