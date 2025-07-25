@@ -10,7 +10,7 @@ info:
   version: 0.0.1
 
 servers:
-  - url: https://shsys.ru/api
+  - url: https://smhmsys.ru/api
 tags:
   - name: Auth
     description: Авторизация и аутентификация в системе
@@ -18,5 +18,648 @@ tags:
     description: Управление устройствами и системами
   - name: Info
     description: Получение информации о состоянии систем и оборудования
+
+components:
+  schemas:
+    SysUser:
+      type: object
+      properties:
+        acc_name:
+          type: string
+          description: Учетная запись (логин) пользователя
+        acc_pwd:
+          type: string
+          description: Пароль пользователя
+      required:
+        - acc_name
+            - acc_pwd
+    NewHouse:
+      type: object
+      properties:
+        display_title:
+          type: string
+          description: Отображаемое название помещения
+        address:
+          type: string
+          description: Гео-адрес помещения
+        owner:
+          type: integer
+          description: Владелец (код пользователя зарегистрированного в системе)
+        house_type:
+          type: integer
+          description: Код типа помещения
+    NewSystem:
+      type: object
+      properties:
+        display_title:
+          type: string
+          description: Отображаемое название подсистемы умного дома
+        type:
+          type: integer
+          description: Код стандартизованного типа системы
+        house:
+          type: integer
+          description: Код помещения, в котором монтируется система
+    NewDevice:
+      type: object
+      properties:
+        display_title:
+          type: string
+          description: Отображаемое название устройства
+        model:
+          type: integer
+          description: Справочный код модели устройства
+        system:
+          type: integer
+          description: Код подсистемы, которой принадлежит устройство 
+    SysDevice:
+      type: object
+      properties:
+        display_title:
+          type: string
+          description: Отображаемое название устройства
+        model:
+          type: integer
+          description: Справочный код модели устройства
+        system:
+          type: integer
+          description: Код подсистемы, которой принадлежит устройство
+        guid:
+          type: string
+          description: Уникальный идентификатор устройства
+        current_status:
+          type: integer
+          description: Текущий статус активности устройства
+        current_measured_value:
+          type: string
+          description: Текущие измеряемые показатели датчиков устройства в сыром формате
+    SmartSystem:
+        type: object
+        properties:
+          display_title:
+            type: string
+            description: Отображаемое название системы умного дома
+          type:
+            type: integer
+            description: Справочный код типа системы
+          uid:
+            type: integer
+            description: Уникальный идентификатор экземпляра системы            
+          size:
+            type: integer
+            description: Полное количество устройств системы
+    SetDeviceInfo:
+        type: object
+        properties:
+          device_guid:
+            type: integer
+            description: Идентификатор устройства для обновления параметров
+          display_title:
+            type: string
+            description: Отображаемое название устройства
+          model:
+            type: integer
+            description: Справочный код модели устройства
+          system:
+            type: integer
+            description: Код подсистемы, которой принадлежит устройство             
+    SmartHouse:
+        type: object
+        properties:
+          guid:
+            type: integer
+            description: Идентификатор конкретного места размещения
+          type:
+            type: integer
+            description: Справочный тип места размещения
+          content_size:
+            type: integer
+            description: Общее количество систем управления в месте размещения
+    DeviceTogler:
+        type: object
+        properties:
+          action_title:
+            type: string
+            description: Описание атомарной операции с устройством
+          devic_id:
+            type: string
+            description: Уникальный идентификатор устройства (GUID)
+
 paths:
-  /
+  /Auth/V1/login:
+    post:
+      tags: 
+        - Auth
+      summary: Выполняет аутентификацию пользователя
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SysUser'
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+                  example: 'Base64-encoded token'
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    result:
+                      type: string
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+  /Sys-ctl/V1/register_house:
+    post:
+      tags: 
+        - Sys-ctl  
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewHouse'
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    result:
+                      type: string
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+  /Sys-ctl/V1/register_system:
+    post:
+      tags: 
+        - Sys-ctl    
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewSystem'
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    result:
+                      type: string
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+  /Sys-ctl/V1/register_device:
+    post:
+      tags: 
+        - Sys-ctl    
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewDevice'
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    result:
+                      type: string
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string              
+  /Sys-ctl/V1/block_device:
+    put:
+      tags: 
+        - Sys-ctl  
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceTogler'
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    result:
+                      type: string
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string    
+  /Sys-ctl/V1/turnon_device:
+    put:
+      tags: 
+        - Sys-ctl  
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceTogler'
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    result:
+                      type: string
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string                
+  /Sys-ctl/V1/update_device:
+    put:
+      tags: 
+        - Sys-ctl    
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetDeviceInfo'
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    result:
+                      type: string
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string      
+  /Sys-ctl/V1/delete_device:
+    put:
+      tags: 
+        - Sys-ctl    
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceTogler'
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    result:
+                      type: string
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+  /Info/V1/user_status:
+    get:
+      tags: 
+        - Info      
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    result:
+                      type: string
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string
+  /Info/V1/house_list:
+    get:
+      tags: 
+        - Info     
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items: 
+                    $ref: '#/components/schemas/SysDevice'
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string    
+  /Info/V1/system_list:
+    get:
+      tags: 
+        - Info
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items: 
+                    $ref: '#/components/schemas/SmartSystem'
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string    
+  /Info/V1/devices_list:
+    get:
+      tags: 
+        - Info
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items: 
+                    $ref: '#/components/schemas/SysDevice'
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string       
+  /Info/V1/device_status:
+    get:
+      tags: 
+        - Info
+      parameters:
+        - name: dev_guid
+          in: query
+          description: Уникальный идентификатор устройства
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+            description: Successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    display_title:
+                      type: string
+                    current_activity_status:
+                      type: integer
+                    current_measured_values:
+                      type: string
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Incorrect format"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error
+          content:
+            text/plain:
+              schema:
+                type: string                                
