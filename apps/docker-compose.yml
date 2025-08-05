@@ -1,47 +1,29 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: smarthome-postgres
+    container_name: smarthome-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: orders
+      PGDATA: /var/lib/postgresql/data/pgdata
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     networks:
       - smarthome-network
     volumes:
-    - type: volume    
-      source: postgres_data
-      target: /Volumes/Data/VM/DV
+      - ./pgdata:/var/lib/postgresql/data/pgdata
 
   temperature-api:
-    image: busybox
+    build: smart_home/tmpr_api/
+    container_name: smarthome-api
     ports:
         - "8081:8081"
     networks:
         - smarthome-network    
-    
-  app:
-    build:
-      context: ./smart_home
-      dockerfile: Dockerfile
-    container_name: smarthome-app
-    depends_on:
-      postgres:
-        condition: service_healthy
-      temperature-api:
-        condition: service_started
-    environment:
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/smarthome
-      - TEMPERATURE_API_URL=http://temperature-api:8081
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
-      - smarthome-network
-
+        
 volumes:
-  postgres_data: 
+  pgdata:
+    driver: local
 
 networks:
   smarthome-network:
