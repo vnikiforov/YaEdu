@@ -1,6 +1,7 @@
 import os
 import psycopg2
 import random
+import json
 
 __db_iface = None
 
@@ -22,27 +23,27 @@ MAX_TEMPERATURE = 60.0
 # Sensor API data interface
 # -----------------------------------------------------------------------------------------------
 def get_sensor_state(id):
-    sensor_data = read_from_db(id)
-    current_value = None
+    sensor_data = read_from_db(SENSOR_DB_STORAGE, [SNSR_ATTR_VAL, SNSR_ATTR_STS], id)
+    result = sensor_data
 
-    if sensor_data:
-        current_value = { SNSR_ATTR_VAL : sensor_data[SNSR_ATTR_VAL], 
-                          SNSR_ATTR_STS : sensor_data[SNSR_ATTR_STS] }
+    if sensor_data and (len(sensor_data) == 1):
+        result = { SNSR_ATTR_VAL : sensor_data[0][0], 
+                   SNSR_ATTR_STS : sensor_data[0][1]}
         
         refresh_sensor_value(id)
     
-    return current_value
+    return result
 
 # -----------------------------------------------------------------------------------------------
 def refresh_sensor_value(id):
-    return update_sensor_data(id, {SNSR_ATTR_VAL : random.uniform(-MAX_TEMPERATURE, MAX_TEMPERATURE)})
+    return update_sensor_data({SNSR_ATTR_ID : id, SNSR_ATTR_VAL : random.uniform(-MAX_TEMPERATURE, MAX_TEMPERATURE)})
 
 # -----------------------------------------------------------------------------------------------
 def update_sensor_data(snsr_description):
     result = None
 
     if snsr_description and (SNSR_ATTR_ID in snsr_description):
-        result = write_to_db(snsr_description.pop(SNSR_ATTR_ID), SENSOR_DB_STORAGE, snsr_description)         
+        result = update_db_rec(snsr_description.pop(SNSR_ATTR_ID), SENSOR_DB_STORAGE, snsr_description)         
 
     return result
 
@@ -62,31 +63,93 @@ def add_sensor_data(snsr_description):
 # DBI
 # -----------------------------------------------------------------------------------------------
 def delete_db_rec(rec_id, storage):
-    return exec_sql_request("Removing data")
+    result = exec_sql_request("DELETE FROM {:s} WHERE {:s}={:d}".format(storage, SNSR_ATTR_ID, rec_id))
+    
+    if result:
+        global __db_iface
+        __db_iface.commit()
+        result = "OK"
+
+    return result
+
+# -----------------------------------------------------------------------------------------------
+def format_db_field(k, v):
+    return "{:s}={:s}".format(k, str(format_df_by_type(v)))
+
+# -----------------------------------------------------------------------------------------------
+def format_df_by_type(v):
+    if type(v) is str:
+        v = "'{:s}'".format(v)
+    return v
 
 # -----------------------------------------------------------------------------------------------
 def update_db_rec(rec_id, storage, data):
-    return exec_sql_request("Updating data")
+    result = None
+    cond = ""
+
+    if rec_id:
+        cond = " WHERE {:s}={:d}".format(SNSR_ATTR_ID, rec_id)
+ 
+    if exec_sql_request("UPDATE {:s} SET {:s}{:s}".
+                        format(storage, ", ".join([format_db_field(k,v) for k,v in data.items()]), cond)):
+        global __db_iface
+        __db_iface.commit()
+        result = "OK"
+
+    return result
 
 # -----------------------------------------------------------------------------------------------
 def write_to_db(storage, dr):
     result = None
 
     if dr:
-        result = exec_sql_request("Writting data")
+        global __db_iface
+
+        if exec_sql_request("INSERT INTO {:s} ({:s}) VALUES ({:s})".
+                            format(storage, ", ".join(list(dr.keys())), 
+                                            ", ".join([format_df_by_type(v) for k,v in dr.items()]))):
+            __db_iface.commit()
+            result = "OK"
 
     return result
 
 # -----------------------------------------------------------------------------------------------
-def read_from_db(storage, id = None):
-    return exec_sql_request("Reading data")
+def read_from_db(storage, what = None, id = None):
+    read_cmd = "SELECT {:s} FROM {:s}{:s}"
+    cond = ""
+    whatData = ""
+
+    if id:
+        cond = " WHERE {:s}={:d}".format(SNSR_ATTR_ID, id)
+    
+    if what is None:
+        whatData = "*"
+    else:
+        whatData = ", ".join(what)
+
+    result = exec_sql_request(read_cmd.format(whatData, storage, cond))
+
+    if result:
+        result = result.fetchall()
+
+    return result
 
 # -----------------------------------------------------------------------------------------------
 def exec_sql_request(sql_rqst):
     result = None
 
-    if is_db_ready:
-        result = "Exec cmd: " + sql_rqst
+    try:
+        global __db_iface
+
+        print("SQL >> " + sql_rqst)
+        
+        if is_db_ready():
+            c = __db_iface.cursor()
+            c.execute(sql_rqst)
+            result = c
+                            
+    except Exception as e:
+        print("DBI error: " + str(e))
 
     return result
 

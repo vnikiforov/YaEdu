@@ -1,5 +1,4 @@
 import db_iface
-import json
 from datetime import datetime 
 from flask import Flask, request, jsonify
 
@@ -18,7 +17,13 @@ def format_answer(data):
     if data:
         res_data = data
 
-    return jsonify({"result":res_data})
+    return jsonify({"result" : res_data})
+
+# -----------------------------------------------------------------------------------------------
+def update_exact_sensor(id):
+    new_state_data = __current_request.json
+    new_state_data[db_iface.SNSR_ATTR_ID] = id
+    return format_answer(db_iface.update_sensor_data(new_state_data))
 
 # -----------------------------------------------------------------------------------------------
 @__app.route(SENSOR_EP_URI, methods=['GET'])
@@ -33,12 +38,12 @@ def get_sensors():
 # -----------------------------------------------------------------------------------------------
 @__app.route(SENSORS_LIST_EP_URI, methods=['POST'])
 def create_sensor():
-    return format_answer(db_iface.add_sensor_data(json.loads(__current_request.json)))
+    return format_answer(db_iface.add_sensor_data(__current_request.json))
 
 # -----------------------------------------------------------------------------------------------
 @__app.route(SENSOR_EP_URI, methods=['PUT'])
-def update_sensor():
-    return format_answer(db_iface.update_sensor_data(json.loads(__current_request.json))) 
+def update_sensor(id):
+    return update_exact_sensor(id)
 
 # -----------------------------------------------------------------------------------------------
 @__app.route(SENSOR_EP_URI, methods=['DELETE'])
@@ -47,8 +52,8 @@ def delete_sensor(id):
 
 # -----------------------------------------------------------------------------------------------
 @__app.route(SENSOR_SETUP_EP_URI, methods=['PATCH'])
-def setup_sensor(id, value):
-    return format_answer(db_iface.update_sensor_data({db_iface.SNSR_ATTR_ID : id, db_iface.SNSR_ATTR_VAL : value}))
+def setup_sensor(id):
+    return update_exact_sensor(id)
 
 # -----------------------------------------------------------------------------------------------
 @__app.route('/health', methods=['GET'])
@@ -58,7 +63,7 @@ def is_online():
     if db_iface.is_db_ready():
         cur_app_status = 'ON_line'
 
-    return jsonify({"service_state":"at {:s} is {:s}".format(datetime.now().strftime("%H:%M:%S"), cur_app_status)})
+    return format_answer("at {:s} is {:s}".format(datetime.now().strftime("%H:%M:%S"), cur_app_status))
 
 # -----------------------------------------------------------------------------------------------
 @__app.route('/')
