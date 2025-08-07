@@ -26,7 +26,7 @@ jobs:
 
     - name: Generate Diagrams
       run: |
-        plantuml apps/smart_home/diagrams/*.puml
+        plantuml apps/smart_home/docs/diagrams/*.puml
 
     - name: Commit Diagrams
       run: |
