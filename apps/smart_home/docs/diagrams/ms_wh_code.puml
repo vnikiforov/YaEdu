@@ -1,5 +1,5 @@
 @startuml
-title SmartHome MS "Commander Center" - component "CommandParser" code diagra
+title SmartHome MS "Commander Center" - component "CommandParser" code diagram
 
 top to bottom direction
 
