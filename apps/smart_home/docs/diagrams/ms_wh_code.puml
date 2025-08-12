@@ -1,0 +1,47 @@
+@startuml
+title SmartHome MS "Commander Center" - component "CommandParser" code diagram
+
+top to bottom direction
+
+!includeurl c4tpl/C4_Component.puml
+
+class Command{
+    +string Name
+    +string URL
+    +ArrayList<> Attributes
+    +string Format
+
+    +bool IsCorrect()
+    +void PrintMan()
+}
+
+class CommandReference {
+    #ArrayList<> SupportingCommands
+    +bool IsCommandSupported()
+}
+
+class CommandAttribute {
+    +string Name
+    +int ValueType
+    +bool IsRequired()
+}
+
+class RequestAcceptor{
+    +bool ReadInput()
+    +bool CanExec()
+    +void PoolCommand()
+    -bool ParseRAW()
+}
+
+class Operation{
+    +ArrayList<> CommandChain
+    +ArrayList Data
+}
+
+RequestAcceptor --+ CommandReference
+CommandAttribute "1" -- "0..*" Command : includes
+Command "1" -- "0..*" CommandReference : includes
+Operation --+ Command
+
+
+@enduml

@@ -16,6 +16,11 @@
 .idea/**/dictionaries
 .idea/**/shelf
 
+# Project specific
+apps/pgdata/
+apps/smart_home/tmpr_api/app/launch.json
+apps/smart_home/tmpr_api/app/__pycache__/
+
 # AWS User-specific
 .idea/**/aws.xml
 
@@ -188,7 +193,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
-
 
 tmp/
 task-*

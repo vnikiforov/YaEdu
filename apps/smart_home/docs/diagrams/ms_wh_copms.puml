@@ -1,0 +1,77 @@
+@startuml
+title SmartHome System Component Diagram
+
+top to bottom direction
+
+!includeurl c4tpl/C4_Component.puml
+
+Container(AuthSvc, "Authorization Service", "PHP/Yii") {
+    Component(ExtAuthController, "ExtAuthController", "Handles authentication by external services")
+    Component(InternalAuthController, "IntAuthController", "Handles authentication by self system")
+    Component(UIbuiler, "AuthUIbuilder", "Create UI for auth for various platforms")
+    Component(AccessManager, "AccessManager", "Controls access to requested resources")
+}
+
+Container(UI_Svc, "UI Create&Handle", "PHP/Yii/React/JS") {
+    Component(UIfabric, "UIfabric", "Gate for request for creating UI")
+    Component(PlatformSupport, "PlatformSupport", "Make same actions for various platform - Web\Mobile\IoT")
+    Component(GUIlibSupport, "GUIlibSupport", "Graphic primitive library")
+    Component(UserActionsSupport, "UserActionsSupport", "User activity handling")
+}
+
+Container(CommCenter, "Commander Center", "PHP/Python") {
+    Component(CommandRouter, "CommandRouter", "Route request to destination")
+    Component(CommandParser, "CommandParser", "Parse & check command parameters")
+    Component(ErrorHandling, "ErrorHandling", "Handle all incorrect actions and cases")
+    Component(ActivityLog, "ActivityLog", "Do log all user and components activities")
+}
+
+Container(API_Gate, "External API", "PHP/Python") {
+    Component(PublisherService, "PublisherService", "Run & handle external requests listener")
+    Component(SecuriyLevel, "SecuriyLevel", "Organize safe data exchange")
+}
+
+Container(HW_Support_Svc, "Hardware Handling", "PHP/Yii/React/JS") {
+    Component(HALsupport, "HWabstractionSupport", "Univesal hardware support system")
+    Component(ClimatSupport, "ClimatDevicesSupport", "Supporting heater, air-conditiong")
+    Component(SequritySupport, "SequrityDevicesSupport", "Supporting security devices")
+    Component(CleaningSupport, "CleaningDevicesSupport", "Supporting cleaning devices")
+    Component(MediaSupport, "MultimediaDevicesSupport", "Supporting multimedia devices")
+}
+
+Container(DB_Svc, "DataBase Center", "SQL/JSON") {
+    Component(DataBaseUnifiedEngine, "DataBaseUnifiedEngine", "Universal DB interface")
+    Component(PGsupport, "PGsupport", "PostgreSQL supporter")
+    Component(JSONdataSupport, "JSONdataSupport", "Simply JSON data storage support")
+    Component(XMLdataSupport, "XMLdataSupport", "Simply XML data storage support")
+}
+
+Rel(UIbuiler, UIfabric, "Ask for creating system login prompt")
+Rel(UIfabric, UIbuiler, "Create system login prompt")
+Rel(UIbuiler, ExtAuthController, "Do authorization by external system")
+Rel(UIbuiler, InternalAuthController, "Do authorization by self")
+
+Rel(UIbuiler, PlatformSupport, "Making platform depended manipulations")
+Rel(UIbuiler, GUIlibSupport, "Create GUI elemens")
+Rel(UserActionsSupport, GUIlibSupport, "Binding UI elemennts to user activities")
+
+Rel(PublisherService, SecuriyLevel, "Check input data")
+Rel(PublisherService, CommandParser, "Parse command format")
+Rel(CommandParser, AccessManager, "Verify client's access")
+Rel(CommandParser, CommandRouter, "Call command's handler")
+Rel(CommandRouter, ActivityLog, "Log current action")
+Rel(CommandRouter, ErrorHandling, "Handle execution problems")
+Rel(CommandRouter, HALsupport, "Exec hardware actions")
+Rel(CommandRouter, DataBaseUnifiedEngine, "Read\write required persistent data")
+
+Rel(HALsupport, ClimatSupport, "Exec climate control commands")
+Rel(HALsupport, SequritySupport, "Exec sequrity control commands")
+Rel(HALsupport, CleaningSupport, "Exec cleaning control commands")
+Rel(HALsupport, MediaSupport, "Exec multimedia control commands")
+Rel(HALsupport, DataBaseUnifiedEngine, "Read\write required persistent data")
+
+Rel(DataBaseUnifiedEngine, PGsupport, "Implements PostgreSQL storage")
+Rel(DataBaseUnifiedEngine, JSONdataSupport, "Implements JSON\KV storage")
+Rel(DataBaseUnifiedEngine, XMLdataSupport, "Implements XML\KV storage")
+
+@enduml

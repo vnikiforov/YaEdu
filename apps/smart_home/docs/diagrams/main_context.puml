@@ -1,0 +1,32 @@
+@startuml
+title SmartHome Monolith (AS IS) Context Diagram
+
+top to bottom direction
+
+!includeurl c4tpl/C4_Component.puml
+
+System_Boundary(generic_commands, "Generic set of abilities") {
+    Person(user, "User", "A tenant of the house")
+    Person(admin, "Administrator", "System administrator, who can manage temperature controllers")
+}
+
+System(UserCommunicator, "Public User Inetrface", "API descriptor, format and rules of supported requsets and answers")
+
+Rel(generic_commands,  UserCommunicator, "Request for current controller state")
+Rel(generic_commands,  UserCommunicator, "Request for full house's controller list")
+Rel(generic_commands,  UserCommunicator, "Update controller attributes")
+Rel(generic_commands,  UserCommunicator, "Setup required temperature for the controller")
+Rel(UserCommunicator, generic_commands, "Inform about controller's state")
+Rel(UserCommunicator, generic_commands, "Returns controllers list")
+Rel(admin, UserCommunicator, "Register new controller")
+Rel(admin, UserCommunicator, "Delete the controller")
+
+System_Ext(hw_api, "Controller Hardware Interface", "REST API")
+System_Ext(data_storage, "DB storage for house's contollers", "PostgreSQL DB")
+
+Rel(UserCommunicator, data_storage, "Store information about installed controllers")
+
+Rel(UserCommunicator, hw_api, "Setup requried temperature by sensor ID")
+Rel(hw_api, UserCommunicator, "Read current temperature from sensor by ID")
+
+@enduml
